@@ -1,4 +1,3 @@
-  
 import streamlit as st
 import joblib
 import numpy as np
@@ -14,12 +13,10 @@ def load_artifacts():
     model = joblib.load("xgb_model.pkl")
     encoder = joblib.load("encoder.pkl")
     scaler = joblib.load("scaler.pkl")
-    num_imputer = joblib.load("num_imputer.pkl")
-    cat_imputer = joblib.load("cat_imputer.pkl")
     unique_values = joblib.load("unique_values.pkl")
-    return model, encoder, scaler, num_imputer, cat_imputer, unique_values
+    return model, encoder, scaler, unique_values
  
-model, encoder, scaler, num_imputer, cat_imputer, unique_values = load_artifacts()
+model, encoder, scaler, unique_values = load_artifacts()
  
 st.subheader("Enter Car Details")
  
@@ -40,21 +37,13 @@ with col2:
 state = st.selectbox("State", sorted([v for v in unique_values['state'] if isinstance(v, str)]))
  
 if st.button("💰 Predict Price", use_container_width=True):
-    numerical_features = ['year', 'odometer']
-    categorical_features = ['manufacturer', 'condition', 'fuel', 'transmission', 'drive', 'type', 'state']
+    num_data = np.array([[float(year), float(odometer)]])
+    num_scaled = scaler.transform(num_data)
  
-    num_data = pd.DataFrame([[year, odometer]], columns=numerical_features)
-    cat_data = pd.DataFrame([[manufacturer, condition, fuel, transmission, drive, vehicle_type, state]],
-                             columns=categorical_features)
- 
-    num_imputed = num_imputer.transform(num_data)
-    cat_imputed = cat_imputer.transform(cat_data)
- 
-    num_scaled = scaler.transform(num_imputed)
-    cat_encoded = encoder.transform(cat_imputed)
+    cat_data = np.array([[manufacturer, condition, fuel, transmission, drive, vehicle_type, state]])
+    cat_encoded = encoder.transform(cat_data)
  
     X_final = np.hstack([num_scaled, cat_encoded])
- 
     prediction = model.predict(X_final)[0]
  
     st.success(f"### Estimated Price: **${prediction:,.0f}**")
