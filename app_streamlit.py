@@ -6,12 +6,12 @@ import plotly.express as px
 
 # ─── Config ───
 st.set_page_config(
-    page_title=" Car Price Prediction",
-    page_icon="",
+    page_title="Car Price Prediction",
+    page_icon="🚗",
     layout="wide"
 )
 
-# ─── CSS ───
+# ─── CSS Styling ───
 st.markdown("""
     <style>
     .title {
@@ -53,7 +53,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ─── Load Model ───
+# ─── Load Model Artifacts ───
 @st.cache_resource
 def load_artifacts():
     model = joblib.load("xgb_model.pkl")
@@ -68,27 +68,24 @@ model, encoder, scaler, num_imputer, cat_imputer, unique_values = load_artifacts
 
 # ─── Sidebar ───
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3774/3774278.png",
-             width=150)
-    st.title(" Car Price AI")
+    st.image("https://cdn-icons-png.flaticon.com/512/3774/3774278.png", width=150)
+    st.title("Car Price AI")
     st.write("---")
     st.info("""
-    **عن الموديل:**
-    -  XGBoost Regressor
-    -  R2 Score: 0.82
-    -  تريننج على 400,000+ عربية
-    -  بيانات Craigslist الأمريكية
+    **About the Model:**
+    - XGBoost Regressor  
+    - R2 Score: 0.82  
+    - Trained on 400,000+ cars  
+    - Dataset: Craigslist (USA)
     """)
 
 # ─── Header ───
-st.markdown('<div class="title"> Used Car Price Prediction</div>',
-            unsafe_allow_html=True)
-st.markdown('<div class="subtitle">ادخل بيانات العربية وهنقولك سعرها!</div>',
-            unsafe_allow_html=True)
+st.markdown('<div class="title">Used Car Price Prediction</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Enter car details and get the predicted price</div>', unsafe_allow_html=True)
 st.divider()
 
 # ─── Inputs ───
-st.subheader(" ادخل بيانات العربية")
+st.subheader("Enter Car Information")
 
 col1, col2, col3 = st.columns(3)
 
@@ -97,41 +94,48 @@ cat_cols = ['manufacturer', 'condition', 'fuel',
             'transmission', 'drive', 'type', 'state']
 
 with col1:
-    st.markdown("**البيانات الرقمية**")
-    year = st.slider(' سنة الصنع', 1990, 2024, 2015)
-    odometer = st.number_input(' الكيلومترات', 0, 500000, 50000, step=1000)
-    manufacturer = st.selectbox(' الماركة',
-                    sorted([v for v in unique_values['manufacturer']
-                            if isinstance(v, str)]))
+    st.markdown("**Numeric Data**")
+    year = st.slider('Year', 1990, 2024, 2015)
+    odometer = st.number_input('Mileage (km)', 0, 500000, 50000, step=1000)
+    manufacturer = st.selectbox(
+        'Manufacturer',
+        sorted([v for v in unique_values['manufacturer'] if isinstance(v, str)])
+    )
 
 with col2:
-    st.markdown("** المواصفات**")
-    condition = st.selectbox(' الحالة',
-                    sorted([v for v in unique_values['condition']
-                            if isinstance(v, str)]))
-    fuel = st.selectbox(' نوع الوقود',
-                    sorted([v for v in unique_values['fuel']
-                            if isinstance(v, str)]))
-    transmission = st.selectbox(' ناقل الحركة',
-                    sorted([v for v in unique_values['transmission']
-                            if isinstance(v, str)]))
+    st.markdown("**Specifications**")
+    condition = st.selectbox(
+        'Condition',
+        sorted([v for v in unique_values['condition'] if isinstance(v, str)])
+    )
+    fuel = st.selectbox(
+        'Fuel Type',
+        sorted([v for v in unique_values['fuel'] if isinstance(v, str)])
+    )
+    transmission = st.selectbox(
+        'Transmission',
+        sorted([v for v in unique_values['transmission'] if isinstance(v, str)])
+    )
 
 with col3:
-    st.markdown("** معلومات إضافية**")
-    drive = st.selectbox(' الدفع',
-                    sorted([v for v in unique_values['drive']
-                            if isinstance(v, str)]))
-    type_ = st.selectbox(' النوع',
-                    sorted([v for v in unique_values['type']
-                            if isinstance(v, str)]))
-    state = st.selectbox(' الولاية',
-                    sorted([v for v in unique_values['state']
-                            if isinstance(v, str)]))
+    st.markdown("**Additional Info**")
+    drive = st.selectbox(
+        'Drive Type',
+        sorted([v for v in unique_values['drive'] if isinstance(v, str)])
+    )
+    type_ = st.selectbox(
+        'Car Type',
+        sorted([v for v in unique_values['type'] if isinstance(v, str)])
+    )
+    state = st.selectbox(
+        'State',
+        sorted([v for v in unique_values['state'] if isinstance(v, str)])
+    )
 
 st.divider()
 
-# ─── Predict ───
-if st.button(' تنبأ بالسعر!'):
+# ─── Prediction ───
+if st.button('Predict Price'):
 
     input_df = pd.DataFrame(
         [[year, odometer, manufacturer, condition,
@@ -140,6 +144,7 @@ if st.button(' تنبأ بالسعر!'):
                  'fuel', 'transmission', 'drive', 'type', 'state']
     )
 
+    # Preprocessing
     input_df[num_cols] = num_imputer.transform(input_df[num_cols])
     input_df[cat_cols] = cat_imputer.transform(input_df[cat_cols])
     input_num = scaler.transform(input_df[num_cols])
@@ -148,17 +153,17 @@ if st.button(' تنبأ بالسعر!'):
 
     prediction = model.predict(input_final)[0]
 
-    # ─── النتيجة ───
+    # ─── Result ───
     st.markdown(f"""
         <div class="price-box">
             <div style="color:#888; font-size:20px;">
-                 السعر المتوقع للعربية
+                Estimated Car Price
             </div>
             <div class="price-value">
                 ${prediction:,.2f}
             </div>
             <div style="color:#888; font-size:16px;">
-                دولار أمريكي
+                USD
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -166,13 +171,13 @@ if st.button(' تنبأ بالسعر!'):
     # ─── Metrics ───
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric(" السعر", f"${prediction:,.0f}")
+        st.metric("Price", f"${prediction:,.0f}")
     with col2:
-        st.metric(" السنة", year)
+        st.metric("Year", year)
     with col3:
-        st.metric(" الكيلومترات", f"{odometer:,}")
+        st.metric("Mileage", f"{odometer:,}")
     with col4:
-        st.metric(" عمر العربية", f"{2024 - year} سنة")
+        st.metric("Car Age", f"{2024 - year} years")
 
     st.divider()
 
@@ -180,9 +185,10 @@ if st.button(' تنبأ بالسعر!'):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader(" السعر مقارنة بالسنة")
+        st.subheader("Price vs Year")
         years = list(range(1990, 2025))
         prices = []
+
         for y in years:
             t = pd.DataFrame(
                 [[y, odometer, manufacturer, condition,
@@ -198,17 +204,18 @@ if st.button(' تنبأ بالسعر!'):
             prices.append(model.predict(np.hstack([t_num, t_cat]))[0])
 
         fig1 = px.line(x=years, y=prices,
-                       labels={'x': 'السنة', 'y': 'السعر ($)'},
-                       title='تأثير سنة الصنع على السعر')
+                       labels={'x': 'Year', 'y': 'Price ($)'},
+                       title='Effect of Manufacturing Year on Price')
         fig1.add_vline(x=year, line_dash="dash",
                        line_color="red",
-                       annotation_text=f"اختيارك: {year}")
+                       annotation_text=f"Selected: {year}")
         st.plotly_chart(fig1, use_container_width=True)
 
     with col2:
-        st.subheader(" السعر مقارنة بالكيلومترات")
+        st.subheader("Price vs Mileage")
         odometers = list(range(0, 300000, 10000))
         prices_od = []
+
         for od in odometers:
             t = pd.DataFrame(
                 [[year, od, manufacturer, condition,
@@ -224,18 +231,19 @@ if st.button(' تنبأ بالسعر!'):
             prices_od.append(model.predict(np.hstack([t_num, t_cat]))[0])
 
         fig2 = px.line(x=odometers, y=prices_od,
-                       labels={'x': 'الكيلومترات', 'y': 'السعر ($)'},
-                       title='تأثير الكيلومترات على السعر')
+                       labels={'x': 'Mileage', 'y': 'Price ($)'},
+                       title='Effect of Mileage on Price')
         fig2.add_vline(x=odometer, line_dash="dash",
                        line_color="red",
-                       annotation_text=f"اختيارك: {odometer:,}")
+                       annotation_text=f"Selected: {odometer:,}")
         st.plotly_chart(fig2, use_container_width=True)
 
     # ─── Feature Importance ───
-    st.subheader(" أهم العوامل في تحديد السعر")
-    feature_names = (num_cols +
-                     list(encoder.get_feature_names_out(cat_cols)))
+    st.subheader("Top Factors Affecting Price")
+
+    feature_names = num_cols + list(encoder.get_feature_names_out(cat_cols))
     importances = model.feature_importances_
+
     top_idx = np.argsort(importances)[-15:]
     top_features = [feature_names[i] for i in top_idx]
     top_importances = [importances[i] for i in top_idx]
@@ -245,13 +253,13 @@ if st.button(' تنبأ بالسعر!'):
                   title='Top 15 Feature Importance',
                   color=top_importances,
                   color_continuous_scale='blues')
+
     st.plotly_chart(fig3, use_container_width=True)
 
     # ─── Footer ───
     st.divider()
     st.markdown("""
         <div style='text-align: center; color: #888;'>
-             Powered by XGBoost & Streamlit |
-             Trained on 300,000+ Cars
+            Powered by XGBoost & Streamlit | Trained on 300,000+ Cars
         </div>
     """, unsafe_allow_html=True)
