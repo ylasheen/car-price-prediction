@@ -75,8 +75,8 @@ with st.sidebar:
     st.info("""
     **عن الموديل:**
     -  XGBoost Regressor
-    -  R2 Score: 0.92
-    -  تريننج على 300,000+ عربية
+    -  R2 Score: 0.82
+    -  تريننج على 400,000+ عربية
     -  بيانات Craigslist الأمريكية
     """)
 
